@@ -1,6 +1,7 @@
 package appcrm.backend.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,15 +20,15 @@ public class ScheduleEntry {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private OffsetDateTime time;
-    private String chatHistory;
+    private String note;
     @JoinColumn(name = "schedule_id")
     @ManyToOne
     @JsonBackReference
     private Schedule schedule;
 
-    public ScheduleEntry (OffsetDateTime time, String chatHistory){
+    public ScheduleEntry (OffsetDateTime time, String note){
         this.time = time;
-        this.chatHistory = chatHistory;
+        this.note = note;
 
     }
 

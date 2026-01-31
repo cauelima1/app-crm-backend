@@ -7,7 +7,6 @@ import appcrm.backend.repository.CustomerRepository;
 import appcrm.backend.repository.LeadsRepository;
 import appcrm.backend.repository.ScheduleEntryRepository;
 import appcrm.backend.repository.ScheduleRepository;
-import org.apache.coyote.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -31,13 +30,13 @@ public class ScheduleService {
     @Autowired
     private CustomerRepository customerRepository;
 
-    public ResponseEntity<ScheduleEntry> create (Long leadId, String chatHistory){
+    public ResponseEntity<Schedule> create (Long leadId, String note){
         Optional<Lead> lead = leadsRepository.findById(leadId);
         if (lead.isPresent()){
             if (lead.get().getSchedule() == null){
-                return ResponseEntity.ok(handleNewSchedule(lead.get(), chatHistory));
+                return ResponseEntity.ok(newSchedule(lead.get(), note));
             } else {
-                return ResponseEntity.ok(handleExistingSchedule(lead.get().getSchedule(), chatHistory));
+                return ResponseEntity.ok(existingSchedule(lead.get().getSchedule(), note));
             }
         }
         return ResponseEntity.badRequest().build();
@@ -47,39 +46,23 @@ public class ScheduleService {
         return ResponseEntity.ok(entryRepository.findAll().stream().filter( e -> e.getId().equals(id)).toList());
     }
 
-    private ScheduleEntry handleNewSchedule (Lead lead, String chatHistory){
+    private Schedule newSchedule (Lead lead, String note){
         Schedule newSchedule = new Schedule();
         newSchedule.setLead(lead);
 
-        ScheduleEntry newEntry = new ScheduleEntry();
-        newEntry.setSchedule(newSchedule);
-        newEntry.setChatHistory(chatHistory);
-        newEntry.setTime(OffsetDateTime.now());
-
         List<ScheduleEntry> entries = new ArrayList<>();
-        entries.add(newEntry);
+        entries.add(new ScheduleEntry(OffsetDateTime.now(), note));
 
         newSchedule.setEntries(entries);
-        repository.save(newSchedule);
-        return newSchedule.getEntries().getLast();
+        return repository.save(newSchedule);
     }
 
-    private ScheduleEntry handleExistingSchedule(Schedule schedule, String chatHistory){
-        ScheduleEntry entry = new ScheduleEntry();
-        entry.setSchedule(schedule);
-        entry.setChatHistory(chatHistory);
-        entry.setTime(OffsetDateTime.now());
-
+    private Schedule existingSchedule(Schedule schedule, String note){
         List<ScheduleEntry> entries = schedule.getEntries();
-        entries.add(entry);
+        entries.add(new ScheduleEntry(OffsetDateTime.now(), note));
 
         schedule.setEntries(entries);
-        repository.save(schedule);
-        return schedule.getEntries().getLast();
-    }
-
-    public List<Schedule> getAll(){
-        return repository.findAll();
+        return repository.save(schedule);
     }
 
 }
